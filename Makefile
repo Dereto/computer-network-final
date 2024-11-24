@@ -11,7 +11,7 @@ TARGETS = server client
 all: $(TARGETS)
 
 server: server.cpp
-	$(CXX) $(CXXFLAGS) -o server server.cpp
+	$(CXX) $(CXXFLAGS) -o server server.cpp -lpthread -lssl -lcrypto
 
 client: client.cpp
 	$(CXX) $(CXXFLAGS) -o client client.cpp
