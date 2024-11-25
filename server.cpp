@@ -2,6 +2,7 @@
 #include <string>
 #include <queue>
 #include <deque>
+#include <algorithm>
 #include <pthread.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -10,7 +11,7 @@
 #include "ChatProtocol.h"
 #include "User.h"
 
-#define SERVER_PORT 8080
+#define SERVER_PORT 7548
 #define MAX_THREADS 10
 
 std::atomic<bool> server_running(true);

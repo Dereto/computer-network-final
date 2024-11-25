@@ -11,7 +11,7 @@
 #include <sstream>
 #include "ChatProtocol.h"
 
-#define SERVER_PORT 8080
+#define SERVER_PORT 7548
 #define MAX_RETRIES 3
 #define RETRY_DELAY 1  // Delay in seconds before retrying
 
