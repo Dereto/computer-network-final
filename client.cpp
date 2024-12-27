@@ -749,8 +749,6 @@ void* call_handler(void* arg) {
 		}
 		pthread_mutex_unlock(&bool_mutex);
 		
-		std::cerr << "aduio thread woke up" << std::endl;
-		
 		if (!client_running) {
 			break;
 		}
@@ -761,6 +759,8 @@ void* call_handler(void* arg) {
 			int peer_socket;
 			struct sockaddr_in peer_addr;
 			socklen_t addr_len = sizeof(peer_addr);
+			
+			std::cout << "Trying to connect..." << std::endl;
 			
 	        peer_socket = accept(listen_socket, (struct sockaddr*)&peer_addr, &addr_len);
 	        if (peer_socket == -1) {
@@ -847,6 +847,8 @@ void* call_handler(void* arg) {
 				
 				continue;
 		    }
+			
+			std::cout << "Trying to connect..." << std::endl;
 			
 			// connect to server
 		    if (connect(peer_socket, (struct sockaddr*)&peer_addr, addr_len) < 0) {

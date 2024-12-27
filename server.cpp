@@ -59,8 +59,15 @@ int main() {
         return -1;
     }
     
+    struct sockaddr_in bound_addr;
+    if (getsockname(server_socket, (struct sockaddr*)&bound_addr, &addr_len) == 0) {
+        std::cout << "Server is running on IP: " << inet_ntoa(bound_addr.sin_addr)
+                  << " Port: " << ntohs(bound_addr.sin_port) << "\n";
+    } else {
+        std::cerr << "Error retrieving socket information.\n";
+    }
+    
     // Handle signal
-    // todo: a total failure here
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
