@@ -755,9 +755,9 @@ void* call_handler(void* arg) {
 			break;
 		}
 		
-		std::cerr << "called by " << peer_ip << " " << peer_port << std::endl;
-		
 		if (incoming_call) {
+			std::cerr << "called by " << peer_ip << " " << peer_port << std::endl;
+			
 			int peer_socket;
 			struct sockaddr_in peer_addr;
 			socklen_t addr_len = sizeof(peer_addr);
