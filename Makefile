@@ -2,7 +2,7 @@
 
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -std=c++17
+CXXFLAGS = -Wall -std=c++17 -O2
 
 # Targets
 TARGETS = server client
@@ -14,7 +14,7 @@ server: server.cpp
 	$(CXX) $(CXXFLAGS) -o server server.cpp -lpthread -lssl -lcrypto
 
 client: client.cpp
-	$(CXX) $(CXXFLAGS) -o client client.cpp
+	$(CXX) $(CXXFLAGS) -o client client.cpp -lpthread -ldl -lm
 
 # Clean up build files
 clean:

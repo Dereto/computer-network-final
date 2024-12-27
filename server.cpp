@@ -60,6 +60,7 @@ int main() {
     }
     
     // Handle signal
+    // todo: a total failure here
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
@@ -185,6 +186,9 @@ void handle_client(int client_socket) {
 		    message = request.bodyAsString();
 		} catch (const std::runtime_error& e) {
 		    std::cerr << "Error receiving message: " << e.what() << std::endl;
+		    if (current_user != nullptr) {
+		    	current_user->logout();
+			}
 		    return;
 		}
 
@@ -193,7 +197,7 @@ void handle_client(int client_socket) {
 
         pthread_mutex_lock(&queue_mutex); // Lock for thread-safe access to `users`
         
-        if (current_user != nullptr) {
+        if (current_user != nullptr && (request.header.messageType != RESPONSE_SUCCESS && request.header.messageType != RESPONSE_FAIL)) {
         	current_user->next_message_id();
 		}
         
@@ -350,6 +354,86 @@ void handle_client(int client_socket) {
 					pthread_mutex_unlock(&queue_mutex);
 				}
 				break;
+			}
+			case STREAM_REQ: {
+	        	size_t pos = message.find(' ', 0);
+	            std::string sender = message.substr(0, pos);
+	            std::string receiver = message.substr(pos + 1);
+	            
+	            if ((current_user == nullptr) || (sender != current_user->username())) {
+					response.header.messageType = RESPONSE_FAIL;
+					body = "Call failed. Invalid credentials.";
+				} else {
+					t_user* other_user = find_user(receiver);
+					if (other_user == nullptr) {
+						response.header.messageType = RESPONSE_FAIL;
+						body = "Call failed. User does not exist.";
+					} else if (!other_user->login_status()) {
+						response.header.messageType = RESPONSE_FAIL;
+						body = "Call failed. User is not online.";
+					} else {
+						Message forward = request;
+						forward.header.messageID = other_user->next_message_id();
+						std::string body = forward.bodyAsString() + " " + current_user->address();
+						forward.body.assign(body.begin(), body.end());
+						forward.header.bodyLength = forward.body.size();
+						current_user->set_pending_call_id(request.header.messageID);
+						if (send_message(other_user->socket(), forward)) {
+							// wait for receiver response
+							pthread_mutex_unlock(&queue_mutex);
+							continue;
+						} else {
+							response.header.messageType = RESPONSE_FAIL;
+							body = "Call failed. can't send.";
+						}
+					}
+				}
+				break;
+			}
+			case RESPONSE_SUCCESS: {
+	        	size_t pos = message.find(' ', 0);
+	            std::string sender = message.substr(0, pos);
+	            std::string receiver = message.substr(pos + 1, message.find(' ', pos));
+	            
+	            if ((current_user == nullptr) || (receiver != current_user->username())) {
+					// Who are you?
+				} else {
+					t_user* other_user = find_user(sender);
+					if (other_user == nullptr || !other_user->login_status()) {
+						// no need for response
+					} else {
+						Message forward = request;
+						forward.header.messageID = other_user->pending_call_id();
+						std::string receiver_address = current_user->address();
+						forward.body.assign(receiver_address.begin(), receiver_address.end());
+						forward.header.bodyLength = forward.body.size();
+						send_message(other_user->socket(), forward);
+					}
+				}
+				
+				pthread_mutex_unlock(&queue_mutex);
+				continue;
+			}
+			case RESPONSE_FAIL: {
+	        	size_t pos = message.find(' ', 0);
+	            std::string sender = message.substr(0, pos);
+	            std::string receiver = message.substr(pos + 1, message.find(' ', pos));
+	            
+	            if ((current_user == nullptr) || (receiver != current_user->username())) {
+					// Who are you?
+				} else {
+					t_user* other_user = find_user(sender);
+					if (other_user == nullptr || !other_user->login_status()) {
+						// no need for response
+					} else {
+						Message forward = request;
+						forward.header.messageID = other_user->pending_call_id();
+						send_message(other_user->socket(), forward);
+					}
+				}
+				
+				pthread_mutex_unlock(&queue_mutex);
+				continue;
 			}
 	        default: {
 	        	response.header.messageType = RESPONSE_FAIL;

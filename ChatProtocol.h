@@ -17,10 +17,11 @@ enum MessageType {
     TEXT_MESSAGE = 4,
     FILE_TRANSFER_INIT = 5,
     FILE_TRANSFER_DATA = 6,
-    EXIT = 7,
-    RESPONSE_SUCCESS = 8,
-    RESPONSE_FAIL = 9,
-    RESPONSE_AGAIN = 10
+    STREAM_REQ = 7,
+    EXIT = 8,
+    RESPONSE_SUCCESS = 9,
+    RESPONSE_FAIL = 10,
+    RESPONSE_AGAIN = 11
 };
 
 // Structure for the message header
@@ -28,15 +29,12 @@ struct MessageHeader {
 	int messageID;
     int messageType; // Type of the message
     int bodyLength;  // Length of the message body
-
-    // Constructor
-    MessageHeader() : messageID(0), messageType(0), bodyLength(0) {}
 };
 
 // Structure for the complete message
 struct Message {
     MessageHeader header;     // Header for message metadata
-    std::vector<char> body;   // Body can now handle both text and binary data
+    std::vector<char> body;   // Body handle both text and binary data
 
     // Serialize the message to a byte stream
     std::vector<char> serialize() const {
@@ -96,7 +94,6 @@ Message receive_message(int socket) {
     while (totalReceived < sizeof(MessageHeader)) {
         ssize_t bytesReceived = recv(socket, headerBuffer + totalReceived, sizeof(MessageHeader) - totalReceived, 0);
         if (bytesReceived <= 0) {
-            perror("Receive failed");
             throw std::runtime_error("Connection closed or error occurred");
         }
         totalReceived += bytesReceived;
@@ -112,7 +109,6 @@ Message receive_message(int socket) {
         while (totalReceived < msg.header.bodyLength) {
             ssize_t bytesReceived = recv(socket, msg.body.data() + totalReceived, msg.header.bodyLength - totalReceived, 0);
             if (bytesReceived <= 0) {
-                perror("Receive failed");
                 throw std::runtime_error("Connection closed or error occurred");
             }
             totalReceived += bytesReceived;

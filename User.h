@@ -10,7 +10,7 @@
 class t_user {
 public:
     t_user(const std::string& uname, const std::string& pwd) 
-        : username_(uname), is_logged_in_(false), message_id_(0) {
+        : username_(uname), is_logged_in_(false), message_id_(0), pending_call_id_(0) {
         password_hash_ = hash_password(pwd);
     }
 
@@ -40,6 +40,7 @@ public:
         }
         if (check_password(pwd)) {
             is_logged_in_ = true;
+            pending_call_id_ = 0;
             return true;
         }
         return false;
@@ -77,13 +78,25 @@ public:
 		message_id_++;
 		return message_id_;
 	}
+	
+	void set_pending_call_id(int message_id) {
+		pending_call_id_ = message_id;
+	}
+	
+	int pending_call_id() const {
+		return pending_call_id_;
+	}
+	
+	std::string address() const {
+		return ip_ + " " + std::to_string(port_);
+	}
 private:
     std::string username_;
     std::string password_hash_;
     bool is_logged_in_;
     std::string ip_;
     int socket_, port_;
-    int message_id_;
+    int message_id_, pending_call_id_;
 
     // Hash password using SHA-256
     std::string hash_password(const std::string& password) const {
